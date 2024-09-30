@@ -1,0 +1,33 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD';
+ACCEPT v_firstdate CHAR PROMPT 'Enter the start date (YYYY-MM-DD): '
+ACCEPT v_seconddate CHAR PROMPT 'Enter the end date (YYYY-MM-DD): '
+
+COLUMN Delivery_ID FORMAT A15 HEADING "Delivery ID";
+COLUMN Arrival_Time FORMAT A13 HEADING "Arrival Time";
+COLUMN Arrival_Date FORMAT A13 HEADING "Arrival Date";
+COLUMN Price FORMAT 999,999.99 HEADING "Price (RM)";
+COLUMN Quantity FORMAT 9999 HEADING "Quantity";
+COLUMN TOTAL_AMOUNT FORMAT 99,999.99 HEADING "Total Amount (RM)";
+
+TTITLE LEFT 'Total amount spent by customers on Delivery from &v_firstdate TO &v_seconddate' -
+       RIGHT 'Page No: ' FORMAT 999 SQL.PNO SKIP 2
+
+SELECT D.Delivery_ID,
+       D.Arrival_Time,
+       TO_CHAR(D.Arrival_Date, 'YYYY-MM-DD') AS Arrival_Date,
+       OD_SUM.Price,
+       OD_SUM.Quantity, -- Use OD_SUM.Quantity instead of OD.Quantity
+       (OD_SUM.Price * OD_SUM.Quantity) AS Total_Amount -- Use OD_SUM.Quantity instead of OD.Quantity
+FROM DELIVERY D
+JOIN (SELECT O.Order_ID, OD.Price, SUM(OD.Quantity) AS Quantity
+      FROM ORDERS O
+      JOIN Order_Details OD ON O.Order_ID = OD.Order_ID
+      GROUP BY O.Order_ID, OD.Price) OD_SUM
+ON D.Order_ID = OD_SUM.Order_ID
+WHERE D.Arrival_Date BETWEEN TO_DATE('&v_firstdate', 'YYYY-MM-DD') AND TO_DATE('&v_seconddate', 'YYYY-MM-DD');
+
+CLEAR COLUMNS
+CLEAR BREAKS
+TTITLE OFF

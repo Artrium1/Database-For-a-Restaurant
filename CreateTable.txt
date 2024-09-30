@@ -1,0 +1,129 @@
+CREATE TABLE Category (
+    Category_ID           VARCHAR2(20)    NOT NULL,
+    Category_Name         VARCHAR2(25)    NOT NULL,
+    Category_Description  VARCHAR2(85)    NOT NULL,
+    Category_Price_Range  DECIMAL(7,2)    NOT NULL,
+    PRIMARY KEY (Category_ID)
+);
+
+CREATE TABLE Promotion (
+    Promotion_ID          VARCHAR2(15)    NOT NULL,
+    Usage_Limit           NUMBER          NOT NULL,  
+    Discount_Amount       VARCHAR2(5)     NOT NULL,
+    PRIMARY KEY (Promotion_ID)
+);
+
+CREATE TABLE Customer (
+    Customer_ID           VARCHAR2(15)    NOT NULL,
+    Customer_Name         VARCHAR2(30)    NOT NULL,
+    Age                   NUMBER          NOT NULL,
+    Hp_Number             VARCHAR2(13)    NOT NULL,
+    Email_Address         VARCHAR2(35)    NOT NULL,
+    Address               VARCHAR2(40)   NOT NULL,
+    PRIMARY KEY (Customer_ID)
+);
+
+CREATE TABLE Staff (
+    Staff_ID              VARCHAR2(20)    NOT NULL,
+    Staff_Name            VARCHAR2(25)    NOT NULL,
+    Gender                VARCHAR2(10)    NOT NULL,
+    Date_Of_Birth         DATE            NOT NULL,
+    Hp_Number             VARCHAR2(15)    NOT NULL,
+    Job_Title             VARCHAR2(20)    NOT NULL,
+    PRIMARY KEY (Staff_ID)
+);
+
+CREATE TABLE Orders(
+    Order_ID              VARCHAR2(20)    NOT NULL,
+    Order_Date            DATE            NOT NULL,
+    Customer_ID           VARCHAR2(20)    NOT NULL,  
+    Staff_ID              VARCHAR2(20)    NOT NULL,
+    PRIMARY KEY (Order_ID),
+    FOREIGN KEY (Customer_ID) REFERENCES Customer(Customer_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES Staff(Staff_ID)
+);
+
+CREATE TABLE Cancellation (
+    Cancellation_ID       VARCHAR2(20)   NOT NULL,
+    Cancellation_Time     VARCHAR2(8)    NOT NULL,
+    Cancellation_Date     DATE           NOT NULL,
+    Order_ID              VARCHAR2(20)   NOT NULL,
+    PRIMARY KEY (Cancellation_ID)
+);
+
+
+CREATE TABLE Refund (
+    Refund_ID             VARCHAR2(20)    NOT NULL,
+    Refund_Amount         DECIMAL(7, 2)   NOT NULL,
+    Refund_Time           VARCHAR2(8)     NOT NULL,
+    Refund_Date           DATE            NOT NULL,
+    Refund_Method         VARCHAR2(50)    NOT NULL,
+    Cancellation_ID       VARCHAR2(20), 
+    PRIMARY KEY (Refund_ID),
+    FOREIGN KEY (Cancellation_ID) REFERENCES Cancellation(Cancellation_ID)
+);
+
+
+
+CREATE TABLE Delivery (
+    Delivery_ID           VARCHAR2(20)   NOT NULL,
+    Order_ID              VARCHAR2(20)   NOT NULL, 
+    Arrival_Time          VARCHAR2(8)    NOT NULL,
+    Arrival_Date          DATE           NOT NULL,
+    PRIMARY KEY (Delivery_ID),
+    FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID)
+);
+
+
+CREATE TABLE Order_Details (
+    Order_Details_ID      VARCHAR2(20)    NOT NULL,
+    Price                 DECIMAL(10, 2)  NOT NULL,
+    Quantity              NUMBER          NOT NULL,
+    Food_Type             VARCHAR2(50),
+    Order_ID              VARCHAR2(20), 
+    Promotion_ID          VARCHAR2(20), 
+    Delivery_ID           VARCHAR2(20), 
+    PRIMARY KEY (Order_Details_ID),
+    FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID), 
+    FOREIGN KEY (Promotion_ID) REFERENCES Promotion(Promotion_ID),
+    FOREIGN KEY (Delivery_ID) REFERENCES Delivery(Delivery_ID) 
+);
+
+CREATE TABLE Payment (
+     Payment_ID           VARCHAR2(20)    NOT NULL,
+     Total_Amount         DECIMAL(7,2)    NOT NULL,
+     Transaction_ID       VARCHAR2(20)    NOT NULL,
+     Order_ID             VARCHAR2(20)    NOT NULL,
+     PRIMARY KEY (Payment_ID),
+     FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID)
+);
+
+CREATE TABLE Menu_Set (
+    Menu_Set_ID           VARCHAR2(7)    NOT NULL,
+    Menu_Set_Name         VARCHAR2(25)   NOT NULL,
+    Menu_Set_Description  VARCHAR2(85)   NOT NULL,
+    Menu_Set_Price        NUMBER         NOT NULL,
+    Order_Details_ID      VARCHAR2(20)   NOT NULL,
+    PRIMARY KEY (Menu_Set_ID),
+    FOREIGN KEY (Order_Details_ID) REFERENCES Order_Details(Order_Details_ID)
+);
+
+CREATE TABLE Ala_Carte (
+    Ala_Carte_ID              VARCHAR2(15)    NOT NULL,
+    Ala_Carte_Name            VARCHAR2(40)    NOT NULL,
+    Ala_Carte_Description     VARCHAR2(85)    NOT NULL,
+    Ala_Carte_Price           DECIMAL(7,2)    NOT NULL,
+    Category_ID               VARCHAR2(10)    NOT NULL,
+    Order_Details_ID          VARCHAR2(20)    NOT NULL,
+    PRIMARY KEY (Ala_Carte_ID),
+    FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID),
+    FOREIGN KEY (Order_Details_ID) REFERENCES Order_Details(Order_Details_ID)
+);
+
+CREATE TABLE Menu_Item (
+    Stock_Quantity        NUMBER              NOT NULL,
+    Menu_Set_ID           VARCHAR2(15)         NOT NULL,
+    Ala_Carte_ID          VARCHAR2(15)        NOT NULL, 
+    Price                 DECIMAL(7, 2)       NOT NULL,
+    PRIMARY KEY (Menu_Set_ID, Ala_Carte_ID)
+);

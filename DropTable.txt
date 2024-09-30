@@ -1,0 +1,13 @@
+DROP TABLE Ala_Carte;
+DROP TABLE Menu_Item;
+DROP TABLE Menu_Set;
+DROP TABLE Payment;
+DROP TABLE Order_Details;
+DROP TABLE Delivery;
+DROP TABLE Refund;
+DROP TABLE Cancellation;
+DROP TABLE Orders;
+DROP TABLE Promotion;
+DROP TABLE Customer;
+DROP TABLE Staff;
+DROP TABLE Category;

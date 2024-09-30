@@ -1,0 +1,60 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_min_refund PROMPT 'Please enter the minimum refund amount: '
+ACCEPT p_max_refund PROMPT 'Please enter the maximum refund amount: '
+
+COLUMN Cancellation_ID FORMAT A20 HEADING 'Cancellation ID'
+COLUMN Refund_Amount FORMAT 9999999.99 HEADING 'Refund Amount'
+COLUMN Refund_Count FORMAT 9999 HEADING 'Refund Count'
+
+SELECT r.Cancellation_ID, SUM(r.Refund_Amount) AS Refund_Amount, COUNT(r.Refund_ID) AS Refund_Count
+FROM Refund r
+JOIN Cancellation c ON r.Cancellation_ID = c.Cancellation_ID
+WHERE r.Refund_Amount BETWEEN &&p_min_refund AND &&p_max_refund
+GROUP BY r.Cancellation_ID;
+
+TTITLE 'Refund Analysis from &&p_min_refund to &&p_max_refund'
+BREAK ON Cancellation_ID SKIP 2
+COMPUTE SUM OF Refund_Amount ON Cancellation_ID
+
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_min_date PROMPT 'Please enter the minimum order date (YYYY-MM-DD): '
+ACCEPT p_max_date PROMPT 'Please enter the maximum order date (YYYY-MM-DD): '
+
+COLUMN Menu_Set_Name FORMAT A25 HEADING 'Menu Set Name'
+COLUMN Total_Revenue FORMAT 9999999.99 HEADING 'Total Revenue'
+
+SELECT ms.Menu_Set_Name, SUM(od.Price * od.Quantity) AS Total_Revenue
+FROM Menu_Set ms
+JOIN Order_Details od ON ms.Order_Details_ID = od.Order_Details_ID
+JOIN Orders o ON od.Order_ID = o.Order_ID
+WHERE o.Order_Date BETWEEN TO_DATE('&&p_min_date', 'YYYY-MM-DD') AND TO_DATE('&&p_max_date', 'YYYY-MM-DD')
+GROUP BY ms.Menu_Set_Name
+ORDER BY Total_Revenue DESC;
+
+TTITLE 'Revenue by Menu Set from &&p_min_date to &&p_max_date'
+BREAK ON Menu_Set_Name SKIP 2
+COMPUTE SUM OF Total_Revenue ON Menu_Set_Name
+
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_discount_percent PROMPT 'Please enter the discount percentage: '
+
+COLUMN Promotion_ID FORMAT A15 HEADING 'Promotion ID'
+COLUMN Discount_Percentage FORMAT 999.99 HEADING 'Discount %'
+COLUMN Total_Orders FORMAT 9999 HEADING 'Total Orders'
+COLUMN Average_Order_Value FORMAT 9999999.99 HEADING 'Avg Order Value'
+
+SELECT p.Promotion_ID, &&p_discount_percent AS Discount_Percentage, COUNT(od.Order_ID) AS Total_Orders, AVG(od.Price) AS Average_Order_Value
+FROM Promotion p
+JOIN Order_Details od ON p.Promotion_ID = od.Promotion_ID
+WHERE p.Discount_Amount LIKE '%' || &&p_discount_percent || '%'
+GROUP BY p.Promotion_ID;
+
+TTITLE 'Impact of Promotion &&p_promotion_id on Sales'
+BREAK ON Promotion_ID SKIP 2
+COMPUTE AVG OF Average_Order_Value ON Promotion_ID

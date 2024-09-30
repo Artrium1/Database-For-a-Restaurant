@@ -1,0 +1,15 @@
+ACCEPT p_job_title PROMPT 'Please enter a job title (e.g., Waiter, Chef): '
+
+COLUMN Staff_Name FORMAT A25 HEADING 'Staff Name'
+COLUMN Job_Title FORMAT A20 HEADING 'Job Title'
+COLUMN Total_Orders FORMAT 9999 HEADING 'Total Orders'
+
+SELECT s.Staff_Name, s.Job_Title, COUNT(o.Order_ID) AS Total_Orders
+FROM Staff s
+JOIN Orders o ON s.Staff_ID = o.Staff_ID
+WHERE s.Job_Title = '&&p_job_title'
+GROUP BY s.Staff_Name, s.Job_Title;
+
+TTITLE 'Staff Performance for Job Title: &&p_job_title'
+BREAK ON Staff_Name SKIP 2
+COMPUTE SUM OF Total_Orders ON Staff_Name

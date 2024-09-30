@@ -1,0 +1,19 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_discount_percent PROMPT 'Please enter the discount percentage: '
+
+COLUMN Promotion_ID FORMAT A15 HEADING 'Promotion ID'
+COLUMN Discount_Percentage FORMAT 999.99 HEADING 'Discount %'
+COLUMN Total_Orders FORMAT 9999 HEADING 'Total Orders'
+COLUMN Average_Order_Value FORMAT 9999999.99 HEADING 'Avg Order Value'
+
+SELECT p.Promotion_ID, &&p_discount_percent AS Discount_Percentage, COUNT(od.Order_ID) AS Total_Orders, AVG(od.Price) AS Average_Order_Value
+FROM Promotion p
+JOIN Order_Details od ON p.Promotion_ID = od.Promotion_ID
+WHERE p.Discount_Amount LIKE '%' || &&p_discount_percent || '%'
+GROUP BY p.Promotion_ID;
+
+TTITLE 'Impact of Promotion &&p_promotion_id on Sales'
+BREAK ON Promotion_ID SKIP 2
+COMPUTE AVG OF Average_Order_Value ON Promotion_ID

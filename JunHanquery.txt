@@ -1,0 +1,161 @@
+
+
+-- Define the inserted date
+ACCEPT inserted_date DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the inserted date (DD/MM/YYYY): '
+
+-- Define start and end date variables
+ACCEPT v_startDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the start date: '
+ACCEPT v_endDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the end date: '
+
+TTITLE CENTER 'Refund List for 'inserted_date'' CENTER SKIP 2  -
+RIGHT 'Page No: ' FORMAT 999 SQL.PNO;
+
+-- Retrieve and display bank transfer refunds
+SELECT 
+    Refund_ID,
+    Refund_Amount,
+    Refund_Time,
+    Refund_Date,
+    Refund_Method,
+    Cancellation_ID
+FROM 
+    (SELECT 
+        Refund_ID,
+        Refund_Amount,
+        Refund_Time,
+        Refund_Date,
+        Refund_Method,
+        Cancellation_ID,
+        ROW_NUMBER() OVER (ORDER BY Refund_Amount ASC) AS rn
+    FROM 
+        Refund
+    WHERE 
+        Refund_Method = 'Bank Transfer'
+    ) Bank_Transfer_Refunds
+WHERE 
+    rn BETWEEN 1 AND 12
+ORDER BY 
+    Refund_Amount ASC;
+
+-- Compute sum and count for bank transfer refunds
+SELECT 
+    SUM(Refund_Amount) AS Bank_Transfer_Total,
+    COUNT(*) AS Bank_Transfer_Count
+FROM 
+    Refund
+WHERE 
+    Refund_Method = 'Bank Transfer';
+
+-- Retrieve and display credit card refunds
+SELECT 
+    Refund_ID,
+    Refund_Amount,
+    Refund_Time,
+    Refund_Date,
+    Refund_Method,
+    Cancellation_ID
+FROM 
+    (SELECT 
+        Refund_ID,
+        Refund_Amount,
+        Refund_Time,
+        Refund_Date,
+        Refund_Method,
+        Cancellation_ID,
+        ROW_NUMBER() OVER (ORDER BY Refund_Amount ASC) AS rn
+    FROM 
+        Refund
+    WHERE 
+        Refund_Method = 'Credit Card'
+    ) Credit_Card_Refunds
+WHERE 
+    rn BETWEEN 1 AND 12
+ORDER BY 
+    Refund_Amount ASC;
+
+-- Compute sum and count for credit card refunds
+SELECT 
+    SUM(Refund_Amount) AS CC_Total,
+    COUNT(*) AS CC_Count
+FROM 
+    Refund
+WHERE 
+    Refund_Method = 'Credit Card';
+
+SET linesize 120
+SET pagesize 40
+
+-- Define the inserted date
+ACCEPT inserted_date DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the inserted date (DD/MM/YYYY): '
+
+-- Define start and end date variables
+ACCEPT v_startDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the start date: '
+ACCEPT v_endDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the end date: '
+
+TTITLE CENTER 'Menu Item List for 'inserted_date'' CENTER SKIP 2  -
+RIGHT 'Page No: ' FORMAT 999 SQL.PNO;
+
+SELECT
+    mi.Menu_Set_ID,
+    mi.Ala_Carte_ID,
+    ac.Ala_Carte_Name,
+    mi.Stock_Quantity,
+    mi.Price,
+    CASE
+        WHEN mi.Stock_Quantity <= 20 THEN 'Warning! ' || ac.Ala_Carte_Name || ' is seriously lacking, please add until 100!'
+        WHEN mi.Stock_Quantity <= 60 THEN 'Please add ' || ac.Ala_Carte_Name || ' until 100!'
+        ELSE 'Sufficient stock, great!'
+    END AS stock_status
+FROM
+    Menu_Item mi
+JOIN
+    Ala_Carte ac ON mi.Ala_Carte_ID = ac.Ala_Carte_ID
+ORDER BY
+    mi.Stock_Quantity;
+
+SELECT
+      SUM(CASE WHEN Stock_Quantity <= 20 THEN 1 ELSE 0 END) AS SUM_QTY_LE_20,
+    SUM(CASE WHEN Stock_Quantity > 20 AND Stock_Quantity <= 60 THEN 1 ELSE 0 END) AS SUM_QTY_GT_20_LE_60,
+    SUM(CASE WHEN Stock_Quantity > 60 THEN 1 ELSE 0 END) AS SUM_QTY_GT_60
+FROM
+    Menu_Item;
+
+
+SET linesize 120
+SET pagesize 40
+
+-- Define the inserted date
+ACCEPT inserted_date DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the inserted date (DD/MM/YYYY): '
+
+-- Define start and end date variables
+ACCEPT v_startDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the start date: '
+ACCEPT v_endDate DATE FORMAT 'DD/MM/YYYY' PROMPT 'Enter the end date: '
+
+TTITLE CENTER 'Staff List for 'inserted_date'' CENTER SKIP 2  -
+RIGHT 'Page No: ' FORMAT 999 SQL.PNO;
+
+-- Retrieve and display staff data
+SELECT 
+    Staff_ID,
+    Staff_Name,
+    TO_CHAR(Date_Of_Birth, 'YYYY-MM-DD') AS Date_Of_Birth,
+    CASE 
+        WHEN EXTRACT(MONTH FROM Date_Of_Birth) = EXTRACT(MONTH FROM TO_DATE('&inserted_date', 'DD/MM/YYYY')) THEN 'Happy Birthday, ' || Staff_Name
+        ELSE ''
+    END AS birthday_wish
+FROM 
+    Staff
+ORDER BY 
+    Date_Of_Birth ASC;
+
+COMPUTE SUM OF birthday_count ON REPORT
+
+-- Compute the sum of staff members with birthdays in the same month as the inserted date
+SELECT 
+    COUNT(CASE 
+            WHEN EXTRACT(MONTH FROM Date_Of_Birth) = EXTRACT(MONTH FROM TO_DATE('&inserted_date', 'DD/MM/YYYY')) THEN 1
+            ELSE NULL
+        END) AS birthday_count
+FROM 
+    Staff;
+

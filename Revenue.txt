@@ -1,0 +1,20 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_min_date PROMPT 'Please enter the minimum order date (YYYY-MM-DD): '
+ACCEPT p_max_date PROMPT 'Please enter the maximum order date (YYYY-MM-DD): '
+
+COLUMN Menu_Set_Name FORMAT A25 HEADING 'Menu Set Name'
+COLUMN Total_Revenue FORMAT 9999999.99 HEADING 'Total Revenue'
+
+SELECT ms.Menu_Set_Name, SUM(od.Price * od.Quantity) AS Total_Revenue
+FROM Menu_Set ms
+JOIN Order_Details od ON ms.Order_Details_ID = od.Order_Details_ID
+JOIN Orders o ON od.Order_ID = o.Order_ID
+WHERE o.Order_Date BETWEEN TO_DATE('&&p_min_date', 'YYYY-MM-DD') AND TO_DATE('&&p_max_date', 'YYYY-MM-DD')
+GROUP BY ms.Menu_Set_Name
+ORDER BY Total_Revenue DESC;
+
+TTITLE 'Revenue by Menu Set from &&p_min_date to &&p_max_date'
+BREAK ON Menu_Set_Name SKIP 2
+COMPUTE SUM OF Total_Revenue ON Menu_Set_Name

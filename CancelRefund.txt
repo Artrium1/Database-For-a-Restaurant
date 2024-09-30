@@ -1,0 +1,19 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ACCEPT p_min_refund PROMPT 'Please enter the minimum refund amount: '
+ACCEPT p_max_refund PROMPT 'Please enter the maximum refund amount: '
+
+COLUMN Cancellation_ID FORMAT A20 HEADING 'Cancellation ID'
+COLUMN Refund_Amount FORMAT 9999999.99 HEADING 'Refund Amount'
+COLUMN Refund_Count FORMAT 9999 HEADING 'Refund Count'
+
+SELECT r.Cancellation_ID, SUM(r.Refund_Amount) AS Refund_Amount, COUNT(r.Refund_ID) AS Refund_Count
+FROM Refund r
+JOIN Cancellation c ON r.Cancellation_ID = c.Cancellation_ID
+WHERE r.Refund_Amount BETWEEN &&p_min_refund AND &&p_max_refund
+GROUP BY r.Cancellation_ID;
+
+TTITLE 'Refund Analysis from &&p_min_refund to &&p_max_refund'
+BREAK ON Cancellation_ID SKIP 2
+COMPUTE SUM OF Refund_Amount ON Cancellation_ID

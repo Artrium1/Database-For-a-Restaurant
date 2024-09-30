@@ -1,0 +1,67 @@
+-- Set formatting options
+SET LINESIZE 130
+SET PAGESIZE 30
+SET RECSEP EACH
+
+-- Prompt user for input
+PROMPT 
+PROMPT Purpose: Display Most Popular Delivery Months to allow management to make more strategic planning on which months to hire more delivery riders.
+PROMPT 
+PROMPT 'Most Popular Delivery Months' 
+PROMPT
+
+ACCEPT v_startdate   CHAR  PROMPT 'Enter the start date (YYYY-MM-DD) (between 2023-2024): '
+ACCEPT v_enddate  CHAR  PROMPT 'Enter the end date (YYYY-MM-DD)   (between 2023-2024): '
+
+-- Break on Year and Month
+BREAK ON Year ON Month
+
+-- Define column headings
+COLUMN Year                HEADING "Year";
+COLUMN Month               FORMAT 99    HEADING "Month";
+COLUMN Total_Delivery      FORMAT 999   HEADING "Total Delivery";
+COLUMN Total_Amount        FORMAT 99,999.99 HEADING "Total Amount (RM)";
+COLUMN Total_Refund        FORMAT 99,999.99 HEADING "Total Refund (RM)";
+COLUMN Total_Revenue       FORMAT 99,999.99 HEADING "Total Revenue (RM)";
+
+-- Title for report
+TTITLE COL 35 'Most Popular Delivery Months Between &v_startdate and &v_enddate' SKIP -
+       COL 35 '_________________' SKIP 1 -
+       LEFT 'Page:' FORMAT 999 SQL.PNO SKIP 2 -
+
+-- Create or replace the view
+CREATE OR REPLACE VIEW Most_Popular_Delivery_Months AS
+SELECT 
+    EXTRACT(YEAR FROM O.Order_Date) AS Year,
+    EXTRACT(MONTH FROM O.Order_Date) AS Month,
+    COUNT(DISTINCT D.Delivery_ID) AS Total_Delivery,
+    SUM(OD.Quantity * OD.Price) AS Total_Amount,
+    SUM(NVL(R.Refund_Amount, 0)) AS Total_Refund,
+    SUM(NVL(OD.Quantity * OD.Price, 0)) - SUM(NVL(R.Refund_Amount, 0)) AS Total_Revenue
+FROM 
+    Orders O,
+    Order_Details OD,
+    Cancellation C,
+    Refund R,
+    Delivery D
+WHERE 
+    O.Order_ID = OD.Order_ID
+    AND O.Order_ID = C.Order_ID(+)
+    AND C.Cancellation_ID = R.Refund_ID(+)
+    AND O.Order_ID = D.Order_ID(+)
+    AND O.Order_Date BETWEEN TO_DATE('&v_startdate', 'YYYY-MM-DD') AND TO_DATE('&v_enddate', 'YYYY-MM-DD')
+GROUP BY 
+    EXTRACT(YEAR FROM O.Order_Date),
+    EXTRACT(MONTH FROM O.Order_Date)
+ORDER BY 
+    EXTRACT(YEAR FROM O.Order_Date),
+    EXTRACT(MONTH FROM O.Order_Date);
+
+-- Display the results
+SELECT * FROM Most_Popular_Delivery_Months;
+
+-- Clear formatting settings
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+SET RECSEP OFF;

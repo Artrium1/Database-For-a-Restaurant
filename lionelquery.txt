@@ -1,0 +1,196 @@
+SET LINESIZE 130
+SET PAGESIZE 30
+SET RECSEP EACH
+
+PROMPT 
+PROMPT Purpose: Display Least Popular Food Type to allow management to make more strategic promotions on least sellable Food Type.
+PROMPT 
+PROMPT 'Least Popular Food Type' 
+PROMPT
+
+ACCEPT v_startdate   CHAR  PROMPT 'Enter the start date (YYYY-MM-DD) (between 2023-2024): '
+ACCEPT v_enddate  CHAR  PROMPT 'Enter the end date (YYYY-MM-DD)   (between 2023-2024): '
+ACCEPT v_numOfRows	NUMBER	FORMAT '99'	PROMPT	'Enter Number of Rows		: '
+
+BREAK ON Order_Date ON Order_Details_ID
+
+COLUMN Order_Date        FORMAT  A14       HEADING  "Order Date";
+COLUMN Order_Details_ID  FORMAT  A16       HEADING  "Order Details ID";
+COLUMN Food_Type         FORMAT  A20       HEADING  "Food Type";
+COLUMN Quantity          FORMAT  9999999   HEADING  "Quantity";
+COLUMN Price             FORMAT  99,999.99 HEADING "Price (RM)";
+COLUMN Total_Amount      FORMAT 99,999.99  HEADING "Total (RM)";
+
+TTITLE 	COL 20 'Top ' &v_numOfRows ' Least Popular Foods from ' &v_startdate ' TO ' &v_enddate SKIP 1 -
+LEFT 'Page:' FORMAT 999 SQL.PNO SKIP 2 -
+
+COMPUTE SUM LABEL 'Total (RM):' OF Total_Amount  ON Order_Date
+
+
+CREATE OR REPLACE VIEW Least_Popular_FoodType AS
+SELECT *
+FROM (
+    SELECT
+        Order_Date,
+        Food_Type,
+        Quantity,
+        Price,
+        Total_Amount
+    FROM (
+        SELECT
+            TO_CHAR(TO_DATE('&v_startdate', 'YYYY-MM-DD'), 'YYYY-MM-DD') || ' to ' || TO_CHAR(TO_DATE('&v_enddate', 'YYYY-MM-DD'), 'YYYY-MM-DD') AS Order_Date,
+            OD.Food_Type,
+            SUM(OD.Quantity) AS Quantity,
+            AVG(OD.Price) AS Price,
+            SUM(OD.Quantity * OD.Price) AS Total_Amount
+        FROM 
+            Order_Details OD
+            JOIN Orders O ON OD.Order_ID = O.Order_ID
+        WHERE O.Order_Date BETWEEN TO_DATE('&v_startdate', 'YYYY-MM-DD') AND TO_DATE('&v_enddate', 'YYYY-MM-DD')
+        GROUP BY
+            TO_CHAR(TO_DATE('&v_startdate', 'YYYY-MM-DD'), 'YYYY-MM-DD') || ' to ' || TO_CHAR(TO_DATE('&v_enddate', 'YYYY-MM-DD'), 'YYYY-MM-DD'),
+            OD.Food_Type
+        ORDER BY 
+            Quantity ASC, Total_Amount ASC
+    )
+    WHERE ROWNUM <= &v_numOfRows
+);
+
+
+SELECT * FROM Least_Popular_FoodType;
+
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+TTITLE OFF
+SET RECSEP OFF;
+
+SET LINESIZE 130
+SET PAGESIZE 30
+SET RECSEP EACH
+
+PROMPT 
+PROMPT Purpose: Management is able to easily analyse and identify most popular delivery month so that they can hire more delivery riders for that month
+PROMPT 'Most Popular Delivery Month 
+PROMPT
+
+ACCEPT v_startdate   CHAR  PROMPT 'Enter the start date (YYYY-MM-DD) (between 2023-2024): '
+ACCEPT v_enddate  CHAR  PROMPT 'Enter the end date (YYYY-MM-DD)   (between 2023-2024): '
+
+BREAK ON Month_Format ON Num_Deliveries
+
+SET LINESIZE 130
+SET PAGESIZE 30
+
+COLUMN Month_Format FORMAT A15 HEADING "Month"
+COLUMN Num_Deliveries FORMAT 9999 HEADING "Number of Deliveries"
+COLUMN Total_Spent FORMAT $99,999.99 HEADING "Total Amount (RM)"
+
+TTITLE 	COL 20 'Most Popular Delivery Month ' &v_startdate ' TO ' &v_enddate SKIP 1 -
+LEFT 'Page:' FORMAT 999 SQL.PNO SKIP 2 -
+
+SELECT TO_CHAR(Arrival_Date, 'YYYY-MM') AS Month_Format,
+       COUNT(*) AS Num_Deliveries,
+       SUM(OD.Price * OD.Quantity) AS Total_Spent
+FROM Delivery D
+JOIN Orders O ON D.Order_ID = O.Order_ID
+JOIN Order_Details OD ON O.Order_ID = OD.Order_ID
+WHERE D.Arrival_Date BETWEEN TO_DATE('&v_startdate', 'YYYY-MM-DD') AND TO_DATE('&v_enddate', 'YYYY-MM-DD')
+GROUP BY TO_CHAR(Arrival_Date, 'YYYY-MM')
+ORDER BY Num_Deliveries DESC;
+
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+TTITLE OFF
+SET RECSEP OFF;
+
+SET LINESIZE 130
+SET PAGESIZE 30
+SET RECSEP EACH
+
+PROMPT 
+PROMPT Purpose: Management is able to easily analyse and identify most common refund methods and streamline refund process by focusing on commonly used methods and removing less used methods.
+PROMPT 
+PROMPT 'Most Popular Refund Method' 
+PROMPT
+
+ACCEPT v_startdate   CHAR  PROMPT 'Enter the start date (YYYY-MM-DD) (between 2023-2024): '
+ACCEPT v_enddate  CHAR  PROMPT 'Enter the end date (YYYY-MM-DD)   (between 2023-2024): '
+
+BREAK ON Month_Format ON Num_Deliveries
+
+SET LINESIZE 130
+SET PAGESIZE 30
+
+COLUMN Month_Format FORMAT A15 HEADING "Month"
+COLUMN Num_Deliveries FORMAT 9999 HEADING "Number of Deliveries"
+COLUMN Total_Spent FORMAT $99,999.99 HEADING "Total Amount (RM)"
+
+TTITLE 	COL 20 'Most Popular Delivery Month ' &v_startdate ' TO ' &v_enddate SKIP 1 -
+LEFT 'Page:' FORMAT 999 SQL.PNO SKIP 2 -
+
+SELECT TO_CHAR(Arrival_Date, 'YYYY-MM') AS Month_Format,
+       COUNT(*) AS Num_Deliveries,
+       SUM(OD.Price * OD.Quantity) AS Total_Spent
+FROM Delivery D
+JOIN Orders O ON D.Order_ID = O.Order_ID
+JOIN Order_Details OD ON O.Order_ID = OD.Order_ID
+WHERE D.Arrival_Date BETWEEN TO_DATE('&v_startdate', 'YYYY-MM-DD') AND TO_DATE('&v_enddate', 'YYYY-MM-DD')
+GROUP BY TO_CHAR(Arrival_Date, 'YYYY-MM')
+ORDER BY Num_Deliveries DESC;
+
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+TTITLE OFF
+SET RECSEP OFF;
+
+SET LINESIZE 130
+SET PAGESIZE 30
+SET RECSEP EACH
+
+PROMPT 
+PROMPT Purpose: Management is able to easily analyse and identify most common refund methods and streamline refund process by focusing on commonly used methods and removing less used methods.
+PROMPT 
+PROMPT 'Most Popular Refund Method' 
+PROMPT
+
+ACCEPT v_startdate   CHAR  PROMPT 'Enter the start date (YYYY-MM-DD) (between 2023-2024): '
+ACCEPT v_enddate  CHAR  PROMPT 'Enter the end date (YYYY-MM-DD)   (between 2023-2024): '
+ACCEPT v_numOfRows	NUMBER	FORMAT '99'	PROMPT	'Enter Number of Rows		: '
+
+BREAK ON Refund_Date ON Refund_Amount
+
+COLUMN Refund_Date     FORMAT A14        HEADING "Refund Date"
+COLUMN Refund_Amount   FORMAT $99,999.99 HEADING "Refund Amount"
+COLUMN Refund_Method   FORMAT A25        HEADING "Refund Method"
+COLUMN Refund_Count    FORMAT 9999       HEADING "Refund Count"
+
+TTITLE 	COL 20 'Top ' &v_numOfRows 'Most Popular Refund Method ' &v_startdate ' TO ' &v_enddate SKIP 1 -
+LEFT 'Page:' FORMAT 999 SQL.PNO SKIP 2 -
+
+COMPUTE SUM LABEL 'Total (RM):' OF Refund_Amount  ON Refund_Date
+
+SELECT *
+FROM (
+    SELECT
+           TO_CHAR(TO_DATE('&v_startdate', 'YYYY-MM-DD'), 'YYYY-MM-DD') || ' to ' || TO_CHAR(TO_DATE('&v_enddate', 'YYYY-MM-DD'), 'YYYY-MM-DD') AS Refund_Date,
+           SUM(R.Refund_Amount) AS "Total Refund Amount",
+           R.Refund_Method,
+           COUNT(*) AS "Refund Count"
+    FROM Payment P
+    JOIN Cancellation C ON P.Order_ID = C.Order_ID
+    JOIN Refund R ON C.Cancellation_ID = R.Cancellation_ID
+    WHERE R.Refund_Date BETWEEN TO_DATE('&v_startdate', 'YYYY-MM-DD') AND TO_DATE('&v_enddate', 'YYYY-MM-DD')
+    GROUP BY TO_CHAR(TO_DATE('&v_startdate', 'YYYY-MM-DD'), 'YYYY-MM-DD') || ' to ' || TO_CHAR(TO_DATE('&v_enddate', 'YYYY-MM-DD'), 'YYYY-MM-DD'),
+             R.Refund_Method
+)
+WHERE ROWNUM <= &v_numOfRows
+ORDER BY "Refund Count" DESC, Refund_Date ASC;
+
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+TTITLE OFF
+SET RECSEP OFF;

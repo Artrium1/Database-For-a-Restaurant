@@ -1,0 +1,34 @@
+SET LINESIZE 120
+SET PAGESIZE 40
+
+ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD';
+
+PROMPT Amount Spent By Each Customer
+PROMPT 
+PROMPT
+
+ACCEPT v_lowrange NUMBER PROMPT 'Enter the minimum payment amount by customer: '
+ACCEPT v_highrange NUMBER PROMPT 'Enter the maximum payment amount by customer: '
+
+COLUMN Payment_ID FORMAT A15 HEADING "Payment ID";
+COLUMN Customer_ID FORMAT A15 HEADING "Customer ID";
+COLUMN Order_ID FORMAT A15 HEADING "Order ID";
+COLUMN Total_Amount FORMAT 99,999.99 HEADING "Total Amount";
+
+TTITLE LEFT 'Amount Spent By Customers BETWEEN &v_lowrange TO &v_highrange' RIGHT 'Page No: ' FORMAT 999 SQL.PNO SKIP 2
+
+SELECT P.Payment_ID,
+       O.Customer_ID,
+       P.Order_ID,
+       P.Total_Amount
+FROM PAYMENT P
+JOIN Orders O ON O.Order_ID = P.Order_ID
+WHERE P.Total_Amount BETWEEN &v_lowrange AND &v_highrange;
+A
+SELECT 'Total: RM ' || TO_CHAR(SUM(P.Total_Amount), '999,999.99') AS "Total (RM)"
+FROM Payment P
+WHERE P.Total_Amount BETWEEN &v_lowrange AND &v_highrange;
+
+CLEAR COLUMNS
+CLEAR BREAKS
+TTITLE OFF

@@ -1,0 +1,18 @@
+ACCEPT p_category_name PROMPT 'Please enter the Ala Carte name: '
+
+COLUMN Ala_Carte_Name FORMAT A40 HEADING 'Ala Carte Name'
+COLUMN Category_Name FORMAT A25 HEADING 'Category Name'
+COLUMN Total_Orders FORMAT 999 HEADING 'Total Orders'
+COLUMN Total_Revenue FORMAT 9999999.99 HEADING 'Total Revenue'
+
+SELECT ac.Ala_Carte_Name, cat.Category_Name, COUNT(od.Order_ID) AS Total_Orders, SUM(od.Price * od.Quantity) AS Total_Revenue
+FROM Ala_Carte ac
+JOIN Category cat ON ac.Category_ID = cat.Category_ID
+JOIN Order_Details od ON ac.Ala_Carte_ID = od.Ala_Carte_ID
+WHERE cat.Category_Name = '&&p_category_name'
+GROUP BY ac.Ala_Carte_Name, cat.Category_Name
+ORDER BY Total_Revenue DESC;
+
+TTITLE 'Ala Carte Sales Report for Category: &&p_category_name'
+BREAK ON Category_Name SKIP 2
+COMPUTE SUM OF Total_Orders, Total_Revenue ON Category_Name
